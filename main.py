@@ -79,9 +79,9 @@ IP_API_URL = "http://ip-api.com/json/"
 
 # 注册插件的装饰器
 @register(
-    "综合查询",
-    "API余额查询与IP查询", 
-    "支持硅基流动与OpenAI余额查询及IP查询功能", 
+    "astrbot_plugin_balance",
+    "Chris", 
+    "支持简单的硅基流动与OpenAI余额查询及IP查询功能", 
     "1.0.0", 
     "https://github.com/Chris95743/astrbot_plugin_balance"
 )
