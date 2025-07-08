@@ -5,7 +5,7 @@
 
 # astrbot_plugin_file
 
-_✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 文件操作 ✨_  
+_✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 简单的余额及IP查询 ✨_  
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
