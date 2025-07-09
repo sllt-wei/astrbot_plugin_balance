@@ -1,5 +1,4 @@
-import requests
-import json
+import aiohttp
 from datetime import datetime
 from astrbot.api.message_components import *
 from astrbot.api.event import filter, AstrMessageEvent
@@ -7,37 +6,38 @@ from astrbot.api import AstrBotConfig
 from astrbot.api.star import Context, Star, register
 
 # 硅基流动余额查询
-def query_siliconflow_balance(api_key):
+async def query_siliconflow_balance(api_key):
     url = "https://api.siliconflow.cn/v1/user/info"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, headers=headers) as response:
+                response.raise_for_status()
+                data = await response.json()
 
-        if data.get('status') and data.get('data'):
-            balance_info = data['data']
-            result = (
-                f"硅基流动账户余额信息:\n"
-                f"用户ID: {balance_info['id']}\n"
-                f"用户名: {balance_info['name']}\n"
-                f"邮箱: {balance_info['email']}\n"
-                f"余额(美元): {balance_info['balance']}\n"
-                f"充值余额(美元): {balance_info['chargeBalance']}\n"
-                f"总余额(美元): {balance_info['totalBalance']}\n"
-            )
-            return result
-        else:
-            return "获取硅基流动余额失败：" + data.get('message', '未知错误')
-    except requests.exceptions.RequestException as e:
-        return f"请求错误: {e}"
+                if data.get('status') and data.get('data'):
+                    balance_info = data['data']
+                    result = (
+                        f"硅基流动账户余额信息:\n"
+                        f"用户ID: {balance_info['id']}\n"
+                        f"用户名: {balance_info['name']}\n"
+                        f"邮箱: {balance_info['email']}\n"
+                        f"余额(美元): {balance_info['balance']}\n"
+                        f"充值余额(美元): {balance_info['chargeBalance']}\n"
+                        f"总余额(美元): {balance_info['totalBalance']}\n"
+                    )
+                    return result
+                else:
+                    return "获取硅基流动余额失败：" + data.get('message', '未知错误')
+        except aiohttp.ClientError as e:
+            return f"请求错误: {e}"
 
 # OpenAI余额查询
-def query_openai_balance(api_key):
+async def query_openai_balance(api_key):
     base_url = "https://api.openai.com"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -49,14 +49,16 @@ def query_openai_balance(api_key):
         today = datetime.today().strftime('%Y-%m-%d')
 
         subscription_url = f"{base_url}/v1/dashboard/billing/subscription"
-        subscription_response = requests.get(subscription_url, headers=headers)
-        subscription_response.raise_for_status()
-        subscription_data = subscription_response.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(subscription_url, headers=headers) as subscription_response:
+                subscription_response.raise_for_status()
+                subscription_data = await subscription_response.json()
 
-        usage_url = f"{base_url}/v1/dashboard/billing/usage?start_date={today}&end_date={today}"
-        usage_response = requests.get(usage_url, headers=headers)
-        usage_response.raise_for_status()
-        usage_data = usage_response.json()
+            usage_url = f"{base_url}/v1/dashboard/billing/usage?start_date={today}&end_date={today}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(usage_url, headers=headers) as usage_response:
+                    usage_response.raise_for_status()
+                    usage_data = await usage_response.json()
 
         account_balance = subscription_data[0].get("soft_limit_usd", 0)
         used_balance = usage_data.get("total_usage", 0) / 100
@@ -71,10 +73,10 @@ def query_openai_balance(api_key):
             f"API访问权限截止时间: {subscription_data[0].get('access_until', '无限制')}\n"
         )
         return result
-    except requests.exceptions.RequestException as e:
+    except aiohttp.ClientError as e:
         return f"请求错误: {e}"
 
-# 定义查询IP地址信息的API URL
+# 查询IP地址信息的API URL
 IP_API_URL = "http://ip-api.com/json/"
 
 # 注册插件的装饰器
@@ -93,69 +95,69 @@ class PluginBalanceIP(Star):
         # 如果没有提供config，尝试手动创建它
         self.config = config or AstrBotConfig()
 
-    # 提取API密钥的公共方法
-    def extract_api_key(self, event: AstrMessageEvent):
+    # 提取API密钥或IP地址的公共方法
+    def _get_command_argument(self, event: AstrMessageEvent):
         messages = event.get_messages()
         if not messages:
             return None
 
-        # 提取消息中的非 At 内容
         message_text = ""
         for message in messages:
             if isinstance(message, At):
-                continue  # 跳过 At 类型的消息
+                continue  # 跳过 @ 消息
             message_text = message.text
-            break  # 获取第一个非 At 消息
+            break
 
         if not message_text:
             return None
 
-        return message_text.split()[1].strip() if len(message_text.split()) > 1 else None
+        parts = message_text.split()
+        if len(parts) < 2:
+            return None
+        return parts[1].strip()
 
     # 查询硅基余额命令
     @filter.command("硅基余额")
     async def siliconflow_balance(self, event: AstrMessageEvent):
         """查询硅基流动余额"""
-        api_key = self.extract_api_key(event)
-
+        api_key = self._get_command_argument(event)
         if not api_key:
             yield event.plain_result("请输入API密钥，格式为：硅基余额 <你的API密钥>")
             return
 
-        result = query_siliconflow_balance(api_key)
+        result = await query_siliconflow_balance(api_key)
         yield event.plain_result(result)
 
     # 查询GPT余额命令
     @filter.command("GPT余额")
     async def openai_balance(self, event: AstrMessageEvent):
         """查询OpenAI余额"""
-        api_key = self.extract_api_key(event)
-
+        api_key = self._get_command_argument(event)
         if not api_key:
             yield event.plain_result("请输入API密钥，格式为：GPT余额 <你的API密钥>")
             return
 
-        result = query_openai_balance(api_key)
+        result = await query_openai_balance(api_key)
         yield event.plain_result(result)
 
     # 查询IP命令
     @filter.command("查询IP")
     async def query_ip_info(self, event: AstrMessageEvent):
         """查询指定IP地址的归属地和运营商"""
-        api_key = self.extract_api_key(event)
-
-        if not api_key:
+        ip_address = self._get_command_argument(event)
+        if not ip_address:
             yield event.plain_result("请输入IP地址，格式为：查询IP <IP地址>")
             return
 
         try:
             # 使用ip-api获取IP信息
-            response = requests.get(f"{IP_API_URL}{api_key}")
-            data = response.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{IP_API_URL}{ip_address}") as response:
+                    data = await response.json()
 
             # 检查API响应
             if data['status'] == 'fail':
-                yield event.plain_result(f"无法查询IP地址 {api_key} 的信息，请检查IP地址是否有效。")
+                yield event.plain_result(f"无法查询IP地址 {ip_address} 的信息，请检查IP地址是否有效。")
                 return
 
             # 提取信息
@@ -183,7 +185,7 @@ class PluginBalanceIP(Star):
             )
             yield event.plain_result(result)
 
-        except requests.RequestException as e:
+        except aiohttp.ClientError as e:
             yield event.plain_result(f"查询IP信息时发生错误: {str(e)}")
 
     # 查询帮助命令
