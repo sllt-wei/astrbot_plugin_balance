@@ -76,6 +76,35 @@ async def query_openai_balance(api_key):
     except aiohttp.ClientError as e:
         return f"请求错误: {e}"
 
+# DeepSeek余额查询
+async def query_ds_balance(api_key):
+    url = "https://api.deepseek.com/user/balance"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Accept": "application/json"
+    }
+
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, headers=headers) as response:
+                response.raise_for_status()
+                data = await response.json()
+
+                if data.get('is_available') is False:
+                    return "DeepSeek账户不可用或无余额信息（未充值）"
+
+                balance_info = data['balance_infos'][0]
+                result = (
+                    f"DeepSeek账户余额信息:\n"
+                    f"币种: {balance_info['currency']}\n"
+                    f"总余额: {balance_info['total_balance']}\n"
+                    f"已授予余额: {balance_info['granted_balance']}\n"
+                    f"充值余额: {balance_info['topped_up_balance']}\n"
+                )
+                return result
+        except aiohttp.ClientError as e:
+            return f"请求错误: {e}"
+
 # 查询IP地址信息的API URL
 IP_API_URL = "http://ip-api.com/json/"
 
@@ -83,8 +112,8 @@ IP_API_URL = "http://ip-api.com/json/"
 @register(
     "astrbot_plugin_balance",
     "Chris", 
-    "支持简单的硅基流动与OpenAI余额查询及IP查询功能", 
-    "1.0.0", 
+    "支持硅基流动、OpenAI、DeepSeek余额查询及IP查询功能", 
+    "1.1.0", 
     "https://github.com/Chris95743/astrbot_plugin_balance"
 )
 class PluginBalanceIP(Star):
@@ -138,6 +167,18 @@ class PluginBalanceIP(Star):
             return
 
         result = await query_openai_balance(api_key)
+        yield event.plain_result(result)
+
+    # 查询DS余额命令
+    @filter.command("DS余额")
+    async def ds_balance(self, event: AstrMessageEvent):
+        """查询DeepSeek余额"""
+        api_key = self._get_command_argument(event)
+        if not api_key:
+            yield event.plain_result("请输入API密钥，格式为：DS余额 <你的API密钥>")
+            return
+
+        result = await query_ds_balance(api_key)
         yield event.plain_result(result)
 
     # 查询IP命令
@@ -195,6 +236,7 @@ class PluginBalanceIP(Star):
         help_text = (
             "使用方法：\n"
             "/硅基余额 <API密钥>: 查询硅基流动平台的余额\n"
+            "/DS余额 <API密钥>: 查询DeepSeek平台的余额\n"
             "/GPT余额 <API密钥>: 查询OpenAI平台的余额\n"
             "/查询IP <IP地址/域名>: 查询指定IP地址的归属地和运营商信息\n"
             "/查询帮助: 显示命令的帮助信息\n"
