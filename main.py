@@ -86,21 +86,20 @@ IP_API_URL = "http://ip-api.com/json/"
     "https://github.com/Chris95743/astrbot_plugin_balance"
 )
 class PluginBalanceIP(Star):
-    def __init__(self, context: Context, config: AstrBotConfig):
+    
+    def __init__(self, context: Context, config: AstrBotConfig = None):
         super().__init__(context)
-        self.config = config
+        self.context = context  # 保存context对象，供后续方法使用
+        # 如果没有提供config，尝试手动创建它
+        self.config = config or AstrBotConfig()
 
-    # 查询硅基余额命令
-    @filter.command("硅基余额")
-    async def siliconflow_balance(self, event: AstrMessageEvent):
-        """查询硅基流动余额"""
+    # 提取API密钥的公共方法
+    def extract_api_key(self, event: AstrMessageEvent):
         messages = event.get_messages()
-
         if not messages:
-            yield event.plain_result("请输入API密钥，格式为：硅基余额 <你的API密钥>")
-            return
+            return None
 
-        # 处理消息中的 At 对象，提取文本
+        # 提取消息中的非 At 内容
         message_text = ""
         for message in messages:
             if isinstance(message, At):
@@ -109,10 +108,20 @@ class PluginBalanceIP(Star):
             break  # 获取第一个非 At 消息
 
         if not message_text:
+            return None
+
+        return message_text.split()[1].strip() if len(message_text.split()) > 1 else None
+
+    # 查询硅基余额命令
+    @filter.command("硅基余额")
+    async def siliconflow_balance(self, event: AstrMessageEvent):
+        """查询硅基流动余额"""
+        api_key = self.extract_api_key(event)
+
+        if not api_key:
             yield event.plain_result("请输入API密钥，格式为：硅基余额 <你的API密钥>")
             return
 
-        api_key = message_text.split()[1].strip()
         result = query_siliconflow_balance(api_key)
         yield event.plain_result(result)
 
@@ -120,25 +129,12 @@ class PluginBalanceIP(Star):
     @filter.command("GPT余额")
     async def openai_balance(self, event: AstrMessageEvent):
         """查询OpenAI余额"""
-        messages = event.get_messages()
+        api_key = self.extract_api_key(event)
 
-        if not messages:
+        if not api_key:
             yield event.plain_result("请输入API密钥，格式为：GPT余额 <你的API密钥>")
             return
 
-        # 处理消息中的 At 对象，提取文本
-        message_text = ""
-        for message in messages:
-            if isinstance(message, At):
-                continue  # 跳过 At 类型的消息
-            message_text = message.text
-            break  # 获取第一个非 At 消息
-
-        if not message_text:
-            yield event.plain_result("请输入API密钥，格式为：GPT余额 <你的API密钥>")
-            return
-
-        api_key = message_text.split()[1].strip()
         result = query_openai_balance(api_key)
         yield event.plain_result(result)
 
@@ -146,33 +142,20 @@ class PluginBalanceIP(Star):
     @filter.command("查询IP")
     async def query_ip_info(self, event: AstrMessageEvent):
         """查询指定IP地址的归属地和运营商"""
-        messages = event.get_messages()
+        api_key = self.extract_api_key(event)
 
-        if not messages:
+        if not api_key:
             yield event.plain_result("请输入IP地址，格式为：查询IP <IP地址>")
             return
 
-        # 处理消息中的 At 对象，提取文本
-        message_text = ""
-        for message in messages:
-            if isinstance(message, At):
-                continue  # 跳过 At 类型的消息
-            message_text = message.text
-            break  # 获取第一个非 At 消息
-
-        if not message_text:
-            yield event.plain_result("请输入IP地址，格式为：查询IP <IP地址>")
-            return
-
-        ip_address = message_text.split()[1].strip()
         try:
             # 使用ip-api获取IP信息
-            response = requests.get(f"{IP_API_URL}{ip_address}")
+            response = requests.get(f"{IP_API_URL}{api_key}")
             data = response.json()
 
             # 检查API响应
             if data['status'] == 'fail':
-                yield event.plain_result(f"无法查询IP地址 {ip_address} 的信息，请检查IP地址是否有效。")
+                yield event.plain_result(f"无法查询IP地址 {api_key} 的信息，请检查IP地址是否有效。")
                 return
 
             # 提取信息
