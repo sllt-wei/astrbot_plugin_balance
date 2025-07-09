@@ -3,7 +3,7 @@
 
 ![:name](https://count.getloli.com/@astrbot_plugin_balance?name=astrbot_plugin_balance&theme=minecraft&padding=6&offset=0&align=top&scale=1&pixelated=1&darkmode=auto)
 
-# astrbot_plugin_file
+# astrbot_plugin_balance
 
 _✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 简单的余额及IP查询 ✨_  
 
@@ -35,13 +35,14 @@ git clone https://github.com/Chris95743/astrbot_plugin_balance
 
 ### 命令
 
-- 进行基本简单的API余额查询与IP查询, 支持硅基流动与OpenAI余额查询及IP地址查询功能。
+- 进行基本简单的API余额查询与IP查询, 支持硅基流动，DeepSeek与OpenAI余额查询及IP地址查询功能。
 - 当然，出于安全考虑，非必要情况下还是不要在群里查询，除非你想将key分享出来。
 
 - 指令调用，如下：
 
 ```plaintext
 /硅基余额 <API密钥>: 查询硅基流动平台的余额
+/DS余额 <API密钥>: 查询DeepSeek平台的余额
 /GPT余额 <API密钥>: 查询OpenAI平台的余额
 /查询IP <IP地址>: 查询指定IP地址的归属地和运营商信息
 /查询帮助: 显示命令的帮助信息
@@ -57,4 +58,4 @@ git clone https://github.com/Chris95743/astrbot_plugin_balance
 ## 📌 注意事项
 
 - 本插件仅供学习交流，作者不承担任何责任，如有需要，可QQ联系:1436198704。
-- 后续考虑加入deepseek余额查询。
+- 后续考虑加入其他平台的余额查询。
