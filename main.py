@@ -113,7 +113,7 @@ IP_API_URL = "http://ip-api.com/json/"
     "astrbot_plugin_balance",
     "Chris", 
     "支持硅基流动、OpenAI、DeepSeek余额查询及IP查询功能", 
-    "1.1.0", 
+    "v1.1.0", 
     "https://github.com/Chris95743/astrbot_plugin_balance"
 )
 class PluginBalanceIP(Star):
