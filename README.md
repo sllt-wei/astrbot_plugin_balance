@@ -16,7 +16,7 @@ _✨ [astrbot](https://github.com/AstrBotDevs/AstrBot) 简单的余额及IP查�
 
 ## 🤝 介绍
 
-- 一个简单的API余额查询与IP查询小插件, 支持硅基流动与OpenAI余额查询及IP地址查询功能。
+- 一个简单的API余额查询与IP查询小插件, 支持硅基流动，DeepSeek与OpenAI余额查询及IP地址查询功能。
 
 ## 📦 安装
 
