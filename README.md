@@ -44,7 +44,7 @@ git clone https://github.com/Chris95743/astrbot_plugin_balance
 /硅基余额 <API密钥>: 查询硅基流动平台的余额
 /DS余额 <API密钥>: 查询DeepSeek平台的余额
 /GPT余额 <API密钥>: 查询OpenAI平台的余额
-/查询IP <IP地址>: 查询指定IP地址的归属地和运营商信息
+/查询IP <IP地址/域名（不用加https:/）>: 查询指定IP地址的归属地和运营商信息
 /查询帮助: 显示命令的帮助信息
 ```
 
