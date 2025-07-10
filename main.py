@@ -187,7 +187,7 @@ class PluginBalanceIP(Star):
         """查询指定IP地址的归属地和运营商"""
         ip_address = self._get_command_argument(event)
         if not ip_address:
-            yield event.plain_result("请输入IP地址，格式为：查询IP <IP地址>")
+            yield event.plain_result("请输入IP地址，格式为：查询IP <IP地址/域名（不用加https:/）>")
             return
 
         try:
@@ -238,7 +238,7 @@ class PluginBalanceIP(Star):
             "/硅基余额 <API密钥>: 查询硅基流动平台的余额\n"
             "/DS余额 <API密钥>: 查询DeepSeek平台的余额\n"
             "/GPT余额 <API密钥>: 查询OpenAI平台的余额\n"
-            "/查询IP <IP地址/域名>: 查询指定IP地址的归属地和运营商信息\n"
+            "/查询IP <IP地址/域名（不用加https:/）>: 查询指定IP地址的归属地和运营商信息\n"
             "/查询帮助: 显示命令的帮助信息\n"
         )
         yield event.plain_result(help_text)
