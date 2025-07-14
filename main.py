@@ -38,7 +38,7 @@ async def query_siliconflow_balance(api_key):
 
 # OpenAI余额查询
 async def query_openai_balance(api_key):
-    base_url = "https://api.openai.com"
+    base_url = "https://sllt.uk"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
